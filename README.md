@@ -1,0 +1,2 @@
+# funcmap
+Go template functions
