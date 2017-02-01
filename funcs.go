@@ -34,7 +34,7 @@ var Map = template.FuncMap{
 	"dec_to_int":                              dec_to_int,
 	"hex_to_int":                              hex_to_int,
 	"from_int":                                from_int,
-	"inc":                                     func(a int64) int64 { return a + 1 },
+	"inc":                                     step,
 	"add":                                     add,
 	"sub":                                     sub,
 	"mul":                                     mul,
@@ -63,6 +63,17 @@ func debug(any ...interface{}) string {
 		s[i] = fmt.Sprintf("%v", a)
 	}
 	return join(" ", s)
+}
+
+//
+func step(a int64, is ...int) int64 {
+	if len(is) == 0 {
+		is = []int{1}
+	}
+	for _, i := range is {
+		a += int64(i)
+	}
+	return a
 }
 
 func add(a, b int64) int64 { return b + a }
