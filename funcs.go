@@ -9,49 +9,51 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"path/filepath"
 )
 
 //
 var Map = template.FuncMap{
-	"debug":                                debug,
-	"ip_math":                              ip_math,
-	"ip4_inc":                              ip4_inc,
-	"ip4_next":                             ip4_next,
-	"ip4_prev":                             ip4_prev,
-	"ip4_add":                              ip4_add,
-	"ip4_join":                             ip4_join,
-	"ip6_inc":                              ip6_inc,
-	"ip6_next":                             ip6_next,
-	"ip6_prev":                             ip6_prev,
-	"ip6_add":                              ip6_add,
-	"ip6_join":                             ip6_join,
-	"cidr_next":                            cidr_next,
-	"ip_ints":                              ip_ints,
-	"ip_split":                             ip_split,
-	"to_int":                               to_int,
-	"dec_to_int":                           dec_to_int,
-	"hex_to_int":                           hex_to_int,
-	"from_int":                             from_int,
-	"inc":                                  func(a int64) int64 { return a + 1 },
-	"add":                                  add,
-	"sub":                                  sub,
-	"mul":                                  mul,
-	"div":                                  div,
-	"mod":                                  mod,
-	"rand":                                 func() int64 { return rand.Int63() },
-	"cleanse":                              cleanse(`[^[:alpha:]]`),
-	"environment":                          environment,
-	"now":                                  time.Now,
-	"index":                                index,
-	"split":                                split,
-	"join":                                 join,
-	"substr":                               substr,
-	"lower":                                strings.ToLower,
-	"replace":                              strings.Replace,
-	"trim":                                 strings.Trim,
-	"trimLeft":                             strings.TrimLeft,
-	"trimRight":                            strings.TrimRight,
-	"upper":                                strings.ToUpper,
+	"debug":                                  debug,
+	"command_line":                           commandLine,
+	"ip_math":                                ip_math,
+	"ip4_inc":                                ip4_inc,
+	"ip4_next":                               ip4_next,
+	"ip4_prev":                               ip4_prev,
+	"ip4_add":                                ip4_add,
+	"ip4_join":                               ip4_join,
+	"ip6_inc":                                ip6_inc,
+	"ip6_next":                               ip6_next,
+	"ip6_prev":                               ip6_prev,
+	"ip6_add":                                ip6_add,
+	"ip6_join":                               ip6_join,
+	"cidr_next":                              cidr_next,
+	"ip_ints":                                ip_ints,
+	"ip_split":                               ip_split,
+	"to_int":                                 to_int,
+	"dec_to_int":                             dec_to_int,
+	"hex_to_int":                             hex_to_int,
+	"from_int":                               from_int,
+	"inc":                                    func(a int64) int64 { return a + 1 },
+	"add":                                    add,
+	"sub":                                    sub,
+	"mul":                                    mul,
+	"div":                                    div,
+	"mod":                                    mod,
+	"rand":                                   func() int64 { return rand.Int63() },
+	"cleanse":                                cleanse(`[^[:alpha:]]`),
+	"environment":                            environment,
+	"now":                                    time.Now,
+	"index":                                  index,
+	"split":                                  split,
+	"join":                                   join,
+	"substr":                                 substr,
+	"lower":                                  strings.ToLower,
+	"replace":                                strings.Replace,
+	"trim":                                   strings.Trim,
+	"trim_left":                              strings.TrimLeft,
+	"trim_right":                             strings.TrimRight,
+	"upper":                                  strings.ToUpper,
 }
 
 //
@@ -350,4 +352,30 @@ func ip_math(math, addr string) string {
 		ip_groups[i] = fmt.Sprintf(format, uint(p)%width)
 	}
 	return join(sep, ip_groups)
+}
+
+// Reproduce a command line string that reflects a usable command line.
+func commandLine() string {
+
+	quoter := func(e string) string {
+		if !strings.Contains(e, " ") {
+			return e
+		}
+		p := strings.SplitN(e, "=", 2)
+		if strings.Contains(p[0], " ") {
+			p[0] = `"` + strings.Replace(p[0], `"`, `\"`, -1) + `"`
+		}
+		if len(p) == 1 {
+			return p[0]
+		}
+		return p[0] + `="` + strings.Replace(p[1], `"`, `\"`, -1) + `"`
+	}
+	each := func(s []string) (o []string) {
+		o = make([]string, len(s))
+		for i, t := range s {
+			o[i] = quoter(t)
+		}
+		return
+	}
+	return filepath.Base(os.Args[0]) + " " + strings.Join(each(os.Args[1:]), " ")
 }
