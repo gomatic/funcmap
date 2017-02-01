@@ -1,2 +1,3 @@
 # funcmap
-Go template functions
+
+Go template functions.
