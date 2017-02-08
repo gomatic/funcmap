@@ -200,11 +200,15 @@ func join(sep string, arr []string) (s string) {
 //
 func substr(start, end int, s string) string {
 	l := len(s)
+	if l == 0 {
+		return s
+	}
+	start, end = start%l, end%l
 	if start < 0 {
 		start = l + start
 	}
 	if end < 0 {
-		end = l + end + 1
+		end = l + end
 	}
 	if start > end {
 		start, end = end, start
