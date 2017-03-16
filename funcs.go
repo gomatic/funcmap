@@ -51,6 +51,7 @@ var Map = template.FuncMap{
 	"substr":       substr,
 	"lower":        strings.ToLower,
 	"replace":      strings.Replace,
+	"title":        strings.Title,
 	"trim":         strings.Trim,
 	"trim_left":    strings.TrimLeft,
 	"trim_right":   strings.TrimRight,
@@ -332,7 +333,7 @@ func ip_math(math, addr string) string {
 		if m[0] != '[' || m[lm-1] != ']' {
 			continue
 		}
-		m = m[1: lm-1]
+		m = m[1 : lm-1]
 		p := ip_values[i]
 		for _, a := range strings.Split(m, ",") {
 			a := a
