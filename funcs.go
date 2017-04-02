@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"text/template"
 	"time"
 )
@@ -15,6 +17,9 @@ import (
 //
 var Map = template.FuncMap{
 	"debug":        debug,
+	"debugging":    debugging,
+	"debug_toggle": debug_toggle,
+	"pause":        pause,
 	"command_line": commandLine,
 	"ip_math":      ip_math,
 	"ip4_inc":      ip4_inc,
@@ -34,6 +39,8 @@ var Map = template.FuncMap{
 	"dec_to_int":   dec_to_int,
 	"hex_to_int":   hex_to_int,
 	"from_int":     from_int,
+	"next":         next,
+	"keynext":      keynext,
 	"inc":          step,
 	"add":          add,
 	"sub":          sub,
@@ -51,10 +58,14 @@ var Map = template.FuncMap{
 	"substr":       substr,
 	"lower":        strings.ToLower,
 	"replace":      strings.Replace,
+	"replace_":     func(n int, old, new, s string) string { return strings.Replace(s, old, new, n) },
 	"title":        strings.Title,
 	"trim":         strings.Trim,
+	"trim_":        func(cut, s string) string { return strings.Trim(s, cut) },
 	"trim_left":    strings.TrimLeft,
+	"trim_left_":   func(cut, s string) string { return strings.TrimLeft(s, cut) },
 	"trim_right":   strings.TrimRight,
+	"trim_right_":  func(cut, s string) string { return strings.TrimRight(s, cut) },
 	"upper":        strings.ToUpper,
 }
 
@@ -68,10 +79,58 @@ var started = func() func() time.Time {
 func debug(any ...interface{}) string {
 	s := make([]string, len(any))
 	for i, a := range any {
-		s[i] = fmt.Sprintf("%v", a)
+		s[i] = fmt.Sprintf("%[1]T %[1]v", a)
 	}
 	return join(" ", s)
 }
+
+// toggle debugging
+var debugging, debug_toggle = func() (func() bool, func() bool) {
+	lock := sync.RWMutex{}
+	_debugging := false
+	get := func() bool {
+		lock.Lock()
+		defer lock.Unlock()
+		return _debugging
+	}
+	toggle := func() bool {
+		lock.Lock()
+		defer lock.Unlock()
+		_debugging = !_debugging
+		return _debugging
+	}
+	return get, toggle
+}()
+
+//
+func pause(t int64) time.Time {
+	paused := time.Now()
+	time.Sleep(time.Duration(t) * time.Millisecond)
+	return paused
+}
+
+// simple sequence generation.
+var next = func() func() int64 {
+	i := int64(0)
+	return func() int64 {
+		return atomic.AddInt64(&i, 1)
+	}
+}()
+
+// key-based sequencing.
+var keynext = func() func(string) int64 {
+	lock := sync.RWMutex{}
+	is := map[string]*int64{}
+	return func(k string) int64 {
+		lock.Lock()
+		defer lock.Unlock()
+		if _, exists := is[k]; !exists {
+			i := int64(0)
+			is[k] = &i
+		}
+		return atomic.AddInt64(is[k], 1)
+	}
+}()
 
 //
 func step(a int64, is ...int) int64 {
@@ -228,11 +287,28 @@ func split(sep, s string) []string {
 }
 
 //
-func index(i int, a []int64) int64 {
-	if a == nil || i < 0 || i >= len(a) {
-		return -1
+func index(i int, a interface{}) interface{} {
+	if a == nil {
+		return nil
 	}
-	return a[i]
+	switch a := a.(type) {
+	case []string:
+		if i < 0 || i >= len(a) {
+			return -1
+		}
+		return a[i]
+	case []int64:
+		if i < 0 || i >= len(a) {
+			return -1
+		}
+		return a[i]
+	case string:
+		if i < 0 || i >= len(a) {
+			return -1
+		}
+		return fmt.Sprintf("%c", a[i])
+	}
+	return a
 }
 
 //
