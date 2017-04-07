@@ -60,6 +60,7 @@ var Map = template.FuncMap{
 	"replace":      strings.Replace,
 	"replace_":     func(n int, old, new, s string) string { return strings.Replace(s, old, new, n) },
 	"title":        strings.Title,
+	"initcap":      func(s string) string { return strings.Title(strings.ToLower(s)) },
 	"trim":         strings.Trim,
 	"trim_":        func(cut, s string) string { return strings.Trim(s, cut) },
 	"trim_left":    strings.TrimLeft,
