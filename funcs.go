@@ -48,6 +48,7 @@ var Map = template.FuncMap{
 	"div":          div,
 	"mod":          mod,
 	"rand":         func() int64 { return rand.Int63() },
+	"identifier":   cleanse(`^[^[:alpha:]_]+|[^[:alnum:]_]`),
 	"cleanse":      cleanse(`[^[:alpha:]]`),
 	"cleanser":     cleanser,
 	"environment":  environment,
