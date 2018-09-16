@@ -49,6 +49,7 @@ var Map = template.FuncMap{
 	"mod":          mod,
 	"rand":         func() int64 { return rand.Int63() },
 	"cleanse":      cleanse(`[^[:alpha:]]`),
+	"cleanser":     cleanser,
 	"environment":  environment,
 	"now":          time.Now,
 	"started":      started(),
@@ -159,6 +160,11 @@ func div(a, b int64) int64 {
 		return 0
 	}
 	return b / a
+}
+
+//
+func cleanser(r, s string) string {
+	return regexp.MustCompile(r).ReplaceAllString(s, "")
 }
 
 //
