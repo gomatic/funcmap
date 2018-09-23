@@ -99,6 +99,8 @@ func UseClock(c clock.Clock) {
 func UseTime(t clock.TimeFunction) {
 	privateTime.lock.Lock()
 	defer privateTime.lock.Unlock()
+	Map["now"] = t
+	Map["started"] = t
 	privateTime.tf = t
 }
 
