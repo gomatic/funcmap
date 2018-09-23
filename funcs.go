@@ -12,6 +12,8 @@ import (
 	"sync/atomic"
 	"text/template"
 	"time"
+
+	"github.com/gomatic/clock"
 )
 
 //
@@ -35,46 +37,74 @@ var Map = template.FuncMap{
 	"cidr_next":    cidr_next,
 	"ip_ints":      ip_ints,
 	"ip_split":     ip_split,
-	"to_int":       to_int,
-	"dec_to_int":   dec_to_int,
-	"hex_to_int":   hex_to_int,
-	"from_int":     from_int,
-	"next":         next,
-	"keynext":      keynext,
-	"inc":          step,
-	"add":          add,
-	"sub":          sub,
-	"mul":          mul,
-	"div":          div,
-	"mod":          mod,
-	"rand":         func() int64 { return rand.Int63() },
-	"identifier":   cleanse(`^[^[:alpha:]_]+|[^[:alnum:]_]`),
-	"cleanse":      cleanse(`[^[:alpha:]]`),
-	"cleanser":     cleanser,
-	"environment":  environment,
-	"now":          time.Now,
-	"started":      started(),
-	"iindex":       index,
-	"split":        split,
-	"join":         join,
-	"substr":       substr,
-	"lower":        strings.ToLower,
-	"replace":      strings.Replace,
-	"replace_":     func(n int, old, new, s string) string { return strings.Replace(s, old, new, n) },
-	"title":        strings.Title,
-	"initcap":      func(s string) string { return strings.Title(strings.ToLower(s)) },
-	"trim":         strings.Trim,
-	"trim_":        func(cut, s string) string { return strings.Trim(s, cut) },
-	"trim_left":    strings.TrimLeft,
-	"trim_left_":   func(cut, s string) string { return strings.TrimLeft(s, cut) },
-	"trim_right":   strings.TrimRight,
-	"trim_right_":  func(cut, s string) string { return strings.TrimRight(s, cut) },
-	"upper":        strings.ToUpper,
+	"to_int":      to_int,
+	"dec_to_int":  dec_to_int,
+	"hex_to_int":  hex_to_int,
+	"from_int":    from_int,
+	"next":        next,
+	"keynext":     keynext,
+	"inc":         step,
+	"add":         add,
+	"sub":         sub,
+	"mul":         mul,
+	"div":         div,
+	"mod":         mod,
+	"rand":        func() int64 { return rand.Int63() },
+	"identifier":  cleanse(`^[^[:alpha:]_]+|[^[:alnum:]_]`),
+	"cleanse":     cleanse(`[^[:alpha:]]`),
+	"cleanser":    cleanser,
+	"environment": environment,
+	"now":         privateTime.Now,
+	"started":     started(),
+	"iindex":      index,
+	"split":       split,
+	"join":        join,
+	"substr":      substr,
+	"lower":       strings.ToLower,
+	"replace":     strings.Replace,
+	"replace_":    func(n int, old, new, s string) string { return strings.Replace(s, old, new, n) },
+	"title":       strings.Title,
+	"initcap":     func(s string) string { return strings.Title(strings.ToLower(s)) },
+	"trim":        strings.Trim,
+	"trim_":       func(cut, s string) string { return strings.Trim(s, cut) },
+	"trim_left":   strings.TrimLeft,
+	"trim_left_":  func(cut, s string) string { return strings.TrimLeft(s, cut) },
+	"trim_right":  strings.TrimRight,
+	"trim_right_": func(cut, s string) string { return strings.TrimRight(s, cut) },
+	"upper":       strings.ToUpper,
+}
+
+type privateClock struct {
+	tf   clock.TimeFunction
+	lock sync.RWMutex
+}
+
+var privateTime = privateClock{
+	tf:   time.Now,
+	lock: sync.RWMutex{},
+}
+
+func (t privateClock) Now() time.Time {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+	return t.tf()
+}
+
+//
+func UseClock(c clock.Clock) {
+	UseTime(c.UTC())
+}
+
+//
+func UseTime(t clock.TimeFunction) {
+	privateTime.lock.Lock()
+	defer privateTime.lock.Unlock()
+	privateTime.tf = t
 }
 
 // To report a consistent time through a single template.
 var started = func() func() time.Time {
-	started := time.Now()
+	started := privateTime.Now()
 	return func() time.Time { return started }
 }
 
@@ -107,7 +137,7 @@ var debugging, debug_toggle = func() (func() bool, func() bool) {
 
 //
 func pause(t int64) time.Time {
-	paused := time.Now()
+	paused := privateTime.tf()
 	time.Sleep(time.Duration(t) * time.Millisecond)
 	return paused
 }

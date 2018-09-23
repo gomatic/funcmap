@@ -1,8 +1,13 @@
 package funcmap
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
+	"time"
+
+	"github.com/gomatic/clock"
+	"github.com/stretchr/testify/assert"
 )
 
 //
@@ -133,6 +138,33 @@ func TestIpMath(t *testing.T) {
 			if e != v {
 				t.Errorf("expect:%v for:%v result:%v == %v", e, m, v, e == v)
 			}
+		}
+	}
+}
+
+func Test_privateTime_Now(t *testing.T) {
+	tests := []struct {
+		name  string
+		clock clock.Clock
+		want  int
+	}{
+		{name: "format", clock: clock.Format, want: 2006},
+		{name: "now", clock: clock.Default, want: time.Now().Year()},
+		{name: "epoch", clock: clock.Epoch, want: 1970},
+		{name: "now", clock: clock.Default, want: time.Now().Year()},
+		{name: "format", clock: clock.Format, want: 2006},
+		{name: "epoch", clock: clock.Epoch, want: 1970},
+		{name: "now", clock: clock.Default, want: time.Now().Year()},
+		{name: "epoch", clock: clock.Epoch, want: 1970},
+		{name: "format", clock: clock.Format, want: 2006},
+	}
+	for i := 0; i < 1; i++ {
+		for _, tt := range tests {
+			t.Run(fmt.Sprintf("%s %03d", tt.name, i), func(t *testing.T) {
+				UseClock(tt.clock)
+				now := privateTime.Now()
+				assert.Equal(t, now.Year(), tt.want, fmt.Sprintf("%s : %s : %s", tt.name, string(tt.clock), now.String()))
+			})
 		}
 	}
 }
