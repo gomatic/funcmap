@@ -54,7 +54,7 @@ var Map = template.FuncMap{
 	"cleanse":      cleanse(`[^[:alpha:]]`),
 	"cleanser":     cleanser,
 	"environment":  environment,
-	"env":          env,
+	"env":          environment,
 	"now":          privateTime.Now,
 	"started":      started(),
 	"iindex":       index,
@@ -220,12 +220,6 @@ func parseInt(base int) func(s string) (int64, error) {
 
 //
 func environment(n string) string {
-	v, _ := os.LookupEnv(n)
-	return v
-}
-
-// Added for compatibility with Hashicorp consul-template
-func env(n string) string {
 	v, _ := os.LookupEnv(n)
 	return v
 }
