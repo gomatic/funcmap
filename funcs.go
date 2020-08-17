@@ -54,6 +54,7 @@ var Map = template.FuncMap{
 	"cleanse":      cleanse(`[^[:alpha:]]`),
 	"cleanser":     cleanser,
 	"environment":  environment,
+	"env":          environment,
 	"now":          privateTime.Now,
 	"started":      started(),
 	"iindex":       index,
