@@ -3,7 +3,7 @@ module github.com/gomatic/funcmap
 go 1.15
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/gomatic/clock v0.0.0-20180923211445-dd56a80856b5
